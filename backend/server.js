@@ -154,8 +154,8 @@ const server = app.listen(config.port, () => {
   logger.info(`  Admin key:  ${config.admin.apiKey ? 'configured' : 'NOT SET (admin routes disabled)'}`);
   logger.info('--------------------------------------------------');
 
-  /* Verify SMTP in the background so a slow mail server never delays boot. */
-  mailer.verify().catch((err) => logger.error(`SMTP check failed: ${err.message}`));
+  /* Check email configuration in the background so boot is never delayed. */
+  mailer.verify().catch((err) => logger.error(`Email configuration check failed: ${err.message}`));
 });
 
 /* ------------------------------------------------------------------ *

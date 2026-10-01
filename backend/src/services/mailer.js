@@ -1,55 +1,51 @@
 'use strict';
 
 /**
- * Email notification for new enquiries (Nodemailer over SMTP).
+ * Email notification for new enquiries (Resend).
  *
- * Deliberately fault-tolerant: if SMTP is not configured - or the send fails -
+ * Deliberately fault-tolerant: if Resend is not configured - or the send fails -
  * the enquiry is still stored and the API still returns success. The failure
  * is recorded on the record (mailError) so it can be retried or noticed later,
  * and logged to the console.
  */
 
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
 const config = require('../config');
 const logger = require('../utils/logger');
 
-let transporter = null;
+let resend = null;
 
-/** Build (once) and return the SMTP transport, or null when unconfigured. */
-function getTransporter() {
-  if (transporter) return transporter;
+function getResend() {
+  if (resend) return resend;
   if (!config.email.configured) return null;
 
-  transporter = nodemailer.createTransport({
-    host: config.email.host,
-    port: config.email.port,
-    secure: config.email.secure,
-    auth: { user: config.email.user, pass: config.email.pass },
-    connectionTimeout: config.email.timeoutMs,
-    greetingTimeout: config.email.timeoutMs,
-    socketTimeout: config.email.timeoutMs,
-  });
-
-  return transporter;
+  resend = new Resend(config.email.apiKey);
+  return resend;
 }
 
-/** Check the SMTP credentials at boot so misconfiguration shows up early. */
+/** Build (once) and return the Resend client, or null when unconfigured. */
+function getResendClient() {
+  if (resend) return resend;
+  if (!config.email.configured) return null;
+
+  resend = new Resend(config.email.apiKey);
+  return resend;
+}
+
+/** Report whether Resend is configured; the SDK has no non-sending verify call. */
 async function verify() {
-  const t = getTransporter();
-  if (!t) {
-    logger.warn('Email notifications are OFF (SMTP not configured). Enquiries are still stored.');
+  const client = getResend();
+
+  if (!client) {
+    logger.warn(
+      'Email notifications are OFF (Resend not configured). Enquiries are still stored.'
+    );
     return false;
   }
-  try {
-    await t.verify();
-    logger.info(`SMTP ready - notifications will be sent to ${config.email.to}`);
-    return true;
-  } catch (err) {
-    logger.error(`SMTP verification failed: ${err.message}`);
-    logger.error('Enquiries will still be stored, but email notifications will fail until .env is fixed.');
-    return false;
-  }
+
+  logger.info(`Resend email notifications configured for ${config.email.to}`);
+  return true;
 }
 
 /* ------------------------------------------------------------------ *
@@ -162,15 +158,17 @@ function buildHtml(e) {
  *          Never throws - the caller always continues.
  */
 async function sendEnquiryNotification(enquiry) {
-  const t = getTransporter();
+  const client = getResend();
 
-  if (!t) {
-    logger.warn(`Enquiry ${enquiry.id} stored, but email notification is disabled (SMTP not configured).`);
-    return { sent: false, reason: 'smtp-not-configured' };
+  if (!client) {
+    logger.warn(
+      `Enquiry ${enquiry.id} stored, but email notification is disabled (Resend not configured).`
+    );
+    return { sent: false, reason: 'resend-not-configured' };
   }
 
   try {
-    const info = await t.sendMail({
+    const { data, error } = await client.emails.send({
       from: config.email.from,
       to: config.email.to,
       replyTo: enquiry.email || undefined,
@@ -179,11 +177,27 @@ async function sendEnquiryNotification(enquiry) {
       html: buildHtml(enquiry),
     });
 
-    logger.info(`Notification for ${enquiry.id} sent to ${config.email.to} (${info.messageId}).`);
-    return { sent: true, messageId: info.messageId };
+    if (error) {
+      throw new Error(error.message || 'Resend failed to send the email');
+    }
+
+    logger.info(
+      `Notification for ${enquiry.id} sent to ${config.email.to} (${data?.id || 'no-id'}).`
+    );
+
+    return {
+      sent: true,
+      messageId: data?.id,
+    };
   } catch (err) {
-    logger.error(`Could not send notification for ${enquiry.id}: ${err.message}`);
-    return { sent: false, reason: err.message };
+    logger.error(
+      `Could not send notification for ${enquiry.id}: ${err.message}`
+    );
+
+    return {
+      sent: false,
+      reason: err.message,
+    };
   }
 }
 

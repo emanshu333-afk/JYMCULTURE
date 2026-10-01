@@ -49,26 +49,21 @@ const config = {
 
   email: {
     enabled: bool(process.env.EMAIL_ENABLED, false),
-    host: process.env.SMTP_HOST || '',
-    port: int(process.env.SMTP_PORT, 587),
-    secure: bool(process.env.SMTP_SECURE, false),
-    user: process.env.SMTP_USER || '',
-    pass: process.env.SMTP_PASS || '',
+    apiKey: process.env.RESEND_API_KEY || '',
+    from: process.env.MAIL_FROM || 'onboarding@resend.dev',
     to: process.env.MAIL_TO || 'JYMCULTURE@gmail.com',
-    from: process.env.MAIL_FROM || process.env.SMTP_USER || 'JYMCULTURE@gmail.com',
-    timeoutMs: int(process.env.SMTP_TIMEOUT_MS, 10000),
   },
 
   /* Enquiry statuses the admin API accepts. */
   statuses: ['new', 'contacted', 'converted', 'closed'],
 };
 
-/* True only when there is enough SMTP detail to even attempt a send. */
+/* True only when there is enough Resend configuration to attempt a send. */
 config.email.configured = Boolean(
   config.email.enabled &&
-    config.email.host &&
-    config.email.user &&
-    config.email.pass
+    config.email.apiKey &&
+    config.email.to &&
+    config.email.from
 );
 
 module.exports = config;

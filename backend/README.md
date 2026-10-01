@@ -7,7 +7,7 @@ which validates the enquiry, stores it, and emails a notification to the gym.
 - **Node.js + Express** REST API
 - **Validation** of every field, with per-field error messages
 - **Storage** in a self-contained JSON file (no database to install)
-- **Email notification** via Nodemailer over SMTP
+- **Email notification** via Resend
 - **CORS** enabled so the static website can call it from a different domain
 - **Admin API** (protected by an API key) to list, filter, export and manage enquiries
 
@@ -76,33 +76,19 @@ this file** — it is already listed in `.gitignore`.
 | `DATA_FILE` | `./data/enquiries.json` | Where enquiries are stored |
 | `STATIC_DIR` | _(empty)_ | Optional: also serve the website from this server |
 | `EMAIL_ENABLED` | `true` | Master switch for notifications |
-| `SMTP_HOST` | `smtp.gmail.com` | SMTP server |
-| `SMTP_PORT` | `587` | `587` = STARTTLS, `465` = implicit TLS |
-| `SMTP_SECURE` | `false` | `true` for port 465, `false` for 587 |
-| `SMTP_USER` | — | The account that sends the mail |
-| `SMTP_PASS` | — | SMTP password / app password |
+| `RESEND_API_KEY` | — | Resend API key |
 | `MAIL_TO` | `JYMCULTURE@gmail.com` | Where notifications land (the gym's inbox) |
-| `MAIL_FROM` | `SMTP_USER` | The "from" line on the email |
-| `SMTP_TIMEOUT_MS` | `10000` | Give up on the mail server after this long |
+| `MAIL_FROM` | `onboarding@resend.dev` | Sender address; use a verified domain in production |
 
-### Setting up Gmail SMTP
+### Setting up Resend
 
-Gmail will **not** accept your normal account password. Use an App Password:
-
-1. Turn on **2-Step Verification** — <https://myaccount.google.com/security>
-2. Open <https://myaccount.google.com/apppasswords>
-3. Create an app password, copy the **16-character** code
-4. Use it as `SMTP_PASS` (spaces are fine, they are ignored)
+Create an API key in your Resend account and use a verified sender domain in production.
 
 ```env
 EMAIL_ENABLED=true
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_SECURE=false
-SMTP_USER=your-gym-account@gmail.com
-SMTP_PASS=abcd efgh ijkl mnop
+RESEND_API_KEY=re_your_api_key
 MAIL_TO=JYMCULTURE@gmail.com
-MAIL_FROM="JYM Culture Website <your-gym-account@gmail.com>"
+MAIL_FROM=onboarding@resend.dev
 ```
 
 Generate a strong admin key with:
@@ -113,8 +99,8 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 ### Email is optional
 
-Leave `EMAIL_ENABLED=false`, **or** leave `SMTP_HOST` / `SMTP_USER` / `SMTP_PASS`
-empty, and the API still works: every enquiry is validated and stored, the email
+Leave `EMAIL_ENABLED=false` or leave `RESEND_API_KEY` empty, and the API still
+works: every enquiry is validated and stored, the email
 step is simply skipped (the reason is saved on the record as `mailError`).
 This is handy for local development.
 
@@ -385,7 +371,7 @@ curl -OJ http://localhost:5000/api/admin/enquiries/export.csv -H "x-api-key: $AD
 }
 ```
 
-`email.configured` is the quickest way to confirm SMTP is wired up correctly.
+`email.configured` is the quickest way to confirm Resend is configured correctly.
 
 ---
 
@@ -448,7 +434,7 @@ backend/
 │   │
 │   ├── services/
 │   │   ├── store.js               JSON-file storage: atomic writes, write queue, list/search/stats
-│   │   └── mailer.js              Nodemailer transport + the HTML/text notification email
+│   │   └── mailer.js              Resend client + the HTML/text notification email
 │   │
 │   └── utils/
 │       ├── logger.js              Timestamped console logger
@@ -537,14 +523,10 @@ public internet.
 
 ## 8. Troubleshooting
 
-**`Invalid login: 535-5.7.8 Username and Password not accepted`**
-You are using the account password. Create a Gmail **App Password** (section 2).
-
 **Emails never arrive**
 Check `GET /api/health` → `email.configured`. If it is `false`, one of
-`EMAIL_ENABLED`, `SMTP_HOST`, `SMTP_USER` or `SMTP_PASS` is missing. Then check the
-stored record's `mailError` field, and look for the `Could not send notification`
-line in the console.
+`EMAIL_ENABLED`, `RESEND_API_KEY`, `MAIL_TO` or `MAIL_FROM` is missing. Then check
+the stored record's `mailError` field and the Resend error in the console.
 
 **CORS error in the browser**
 Set `CORS_ORIGIN` to the exact origin shown in the browser console — scheme and
