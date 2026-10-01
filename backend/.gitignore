@@ -1,0 +1,14 @@
+node_modules/
+.env
+.env.local
+npm-debug.log*
+yarn-error.log*
+*.log
+
+# never commit real enquiry data
+data/*.json
+data/*.json.corrupt-*
+!data/.gitkeep
+
+.DS_Store
+coverage/

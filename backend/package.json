@@ -1,0 +1,31 @@
+{
+  "name": "jym-culture-gym-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Backend API for the JYM CULTURE GYM & SPA website - receives enquiry/booking form submissions, validates and stores them, and emails a notification to the gym.",
+  "main": "server.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "smoke": "node scripts/smoke-test.js"
+  },
+  "keywords": [
+    "gym",
+    "express",
+    "enquiry",
+    "booking",
+    "nodemailer",
+    "rest-api"
+  ],
+  "author": "JYM CULTURE GYM & SPA",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "nodemailer": "^6.9.13"
+  }
+}
