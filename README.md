@@ -135,7 +135,7 @@ npm run smoke
 The server works out of the box: with `EMAIL_ENABLED=false` it still validates and
 stores every submission — it simply skips the email step. To turn email on, set
 `EMAIL_ENABLED=true` plus `SMTP_USER` and a Gmail **App Password** in `SMTP_PASS`
-(not your normal Gmail password), with `MAIL_TO=JYMCULTURE@gmail.com`.
+(not your normal Gmail password), with `MAIL_TO=emanshu001@gmail.com`.
 Full details, the API reference and deployment instructions are in
 **`backend/README.md`**.
 

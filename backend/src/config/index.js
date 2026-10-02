@@ -51,7 +51,7 @@ const config = {
     enabled: bool(process.env.EMAIL_ENABLED, false),
     apiKey: process.env.RESEND_API_KEY || '',
     from: process.env.MAIL_FROM || 'onboarding@resend.dev',
-    to: process.env.MAIL_TO || 'JYMCULTURE@gmail.com',
+    to: process.env.MAIL_TO || 'emanshu001@gmail.com',
   },
 
   /* Enquiry statuses the admin API accepts. */

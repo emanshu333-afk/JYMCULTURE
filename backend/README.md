@@ -77,7 +77,7 @@ this file** — it is already listed in `.gitignore`.
 | `STATIC_DIR` | _(empty)_ | Optional: also serve the website from this server |
 | `EMAIL_ENABLED` | `true` | Master switch for notifications |
 | `RESEND_API_KEY` | — | Resend API key |
-| `MAIL_TO` | `JYMCULTURE@gmail.com` | Where notifications land (the gym's inbox) |
+| `MAIL_TO` | `emanshu001@gmail.com` | Where notifications land (the gym's inbox) |
 | `MAIL_FROM` | `onboarding@resend.dev` | Sender address; use a verified domain in production |
 
 ### Setting up Resend
@@ -87,7 +87,7 @@ Create an API key in your Resend account and use a verified sender domain in pro
 ```env
 EMAIL_ENABLED=true
 RESEND_API_KEY=re_your_api_key
-MAIL_TO=JYMCULTURE@gmail.com
+MAIL_TO=emanshu001@gmail.com
 MAIL_FROM=onboarding@resend.dev
 ```
 
